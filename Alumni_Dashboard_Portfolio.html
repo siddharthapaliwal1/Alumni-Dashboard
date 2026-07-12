@@ -1,0 +1,1769 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Alumni Data Dashboard – Student Records Management System</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@700&display=swap');
+
+:root {
+  --crimson: #9b1c3a;
+  --crimson-light: #c0274f;
+  --crimson-dark: #6d1229;
+  --navy: #1b3a6b;
+  --navy-light: #2c5aa0;
+  --navy-dark: #0f2444;
+  --cream: #f7f3ee;
+  --warm-gray: #e8e2db;
+  --card-bg: rgba(255,255,255,0.92);
+  --text-dark: #1a1a2e;
+  --text-mid: #444;
+  --text-light: #777;
+  --shadow: 0 4px 20px rgba(0,0,0,0.13);
+  --radius: 12px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Inter', sans-serif;
+  background: #1a0a0f;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ── HERO BG ── */
+.hero-bg {
+  position: fixed;
+  inset: 0;
+  background: linear-gradient(160deg, #2d0a15 0%, #1a0a0f 38%, #0d1626 68%, #0a1830 100%);
+  z-index: 0;
+}
+.hero-bg::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%239b1c3a' fill-opacity='0.04'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+}
+
+/* ── WRAPPER ── */
+.wrapper {
+  position: relative;
+  z-index: 1;
+  padding: 0 0 32px;
+}
+
+/* ── TOP HEADER ── */
+.header {
+  background: linear-gradient(120deg, rgba(155,28,58,0.96) 0%, rgba(109,18,41,0.98) 45%, rgba(27,58,107,0.97) 100%);
+  border-bottom: 3px solid var(--navy-light);
+  padding: 0 24px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  min-height: 72px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.4);
+}
+
+.logo-box {
+  background: white;
+  border-radius: 10px;
+  padding: 7px 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+.logo-text-top { font-size: 10px; font-weight: 700; color: var(--crimson); letter-spacing: 2px; }
+.logo-text-main {
+  font-size: 18px;
+  font-weight: 900;
+  color: var(--crimson);
+  line-height: 1;
+  letter-spacing: -0.5px;
+}
+.logo-text-sub { font-size: 7.5px; color: var(--crimson); letter-spacing: 1.5px; }
+.logo-icon {
+  width: 32px; height: 32px;
+  border: 2.5px solid var(--crimson);
+  border-radius: 6px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px; color: var(--crimson);
+}
+
+.header-title {
+  font-size: 22px;
+  font-weight: 700;
+  color: white;
+  letter-spacing: -0.3px;
+  line-height: 1.2;
+}
+.header-title span { display: block; font-size: 12px; font-weight: 400; opacity: 0.7; letter-spacing: 0; }
+
+.header-spacer { flex: 1; }
+
+/* UPLOAD BUTTON in header */
+.upload-btn-wrap { position: relative; }
+.upload-btn {
+  background: rgba(255,255,255,0.15);
+  border: 2px solid rgba(255,255,255,0.4);
+  color: white;
+  padding: 9px 18px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex; align-items: center; gap: 7px;
+  font-family: 'Inter', sans-serif;
+}
+.upload-btn:hover { background: rgba(255,255,255,0.28); border-color: white; }
+#file-input { display: none; }
+.upload-status {
+  font-size: 11px;
+  color: rgba(255,255,255,0.65);
+  margin-top: 3px;
+  text-align: center;
+}
+
+.gdpr-pill {
+  background: rgba(255,255,255,0.12);
+  border: 1px solid rgba(255,255,255,0.25);
+  color: rgba(255,255,255,0.8);
+  padding: 5px 12px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  flex-shrink: 0;
+}
+
+/* ── KPI ROW ── */
+.kpi-row {
+  display: flex;
+  gap: 12px;
+  padding: 16px 24px 0;
+  flex-wrap: wrap;
+}
+.kpi-card {
+  background: var(--card-bg);
+  border-radius: var(--radius);
+  padding: 14px 20px;
+  flex: 1;
+  min-width: 130px;
+  box-shadow: var(--shadow);
+  text-align: center;
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255,255,255,0.6);
+  transition: transform 0.2s;
+}
+.kpi-card:hover { transform: translateY(-2px); }
+.kpi-value {
+  font-size: 32px;
+  font-weight: 800;
+  color: var(--crimson);
+  line-height: 1;
+  font-family: 'Playfair Display', serif;
+}
+.kpi-card:nth-child(even) .kpi-value { color: var(--navy); }
+.kpi-label {
+  font-size: 11.5px;
+  color: var(--text-mid);
+  margin-top: 4px;
+  font-weight: 500;
+}
+
+/* ── CAMPUS FILTER ROW ── */
+.campus-row {
+  padding: 14px 24px 0;
+}
+.campus-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: rgba(255,255,255,0.5);
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  text-align: center;
+  margin-bottom: 8px;
+}
+.campus-pills {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.campus-pill {
+  background: rgba(255,255,255,0.12);
+  border: 2px solid rgba(255,255,255,0.25);
+  color: rgba(255,255,255,0.85);
+  padding: 8px 20px;
+  border-radius: 30px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex; align-items: center; gap: 6px;
+}
+.campus-pill:hover, .campus-pill.active {
+  background: var(--crimson);
+  border-color: var(--crimson-light);
+  color: white;
+  box-shadow: 0 0 16px rgba(155,28,58,0.5);
+}
+.campus-pill .cp-count {
+  background: rgba(255,255,255,0.2);
+  border-radius: 10px;
+  padding: 1px 7px;
+  font-size: 11px;
+}
+.campus-pill.active .cp-count { background: rgba(255,255,255,0.25); }
+
+/* ── SEX FILTER ── */
+.sex-pills {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.sex-pill {
+  background: rgba(255,255,255,0.12);
+  border: 2px solid rgba(255,255,255,0.25);
+  color: rgba(255,255,255,0.85);
+  padding: 7px 16px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: center;
+}
+.sex-pill:hover, .sex-pill.active {
+  background: var(--navy);
+  border-color: var(--navy-light);
+  color: white;
+}
+
+/* ── FILTER ROW ── */
+.filter-bar {
+  display: flex;
+  gap: 10px;
+  padding: 14px 24px 0;
+  flex-wrap: wrap;
+  align-items: flex-end;
+}
+.filter-group { display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 140px; }
+.filter-group label { font-size: 10px; font-weight: 600; color: rgba(255,255,255,0.5); text-transform: uppercase; letter-spacing: 1px; }
+.filter-group select, .filter-group input {
+  background: rgba(255,255,255,0.1);
+  border: 1.5px solid rgba(255,255,255,0.2);
+  color: white;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  outline: none;
+  cursor: pointer;
+  font-family: 'Inter', sans-serif;
+  transition: border-color 0.2s;
+}
+.filter-group select:focus, .filter-group input:focus {
+  border-color: var(--crimson-light);
+}
+.filter-group select option { background: #2d0a15; color: white; }
+.filter-group input::placeholder { color: rgba(255,255,255,0.35); }
+
+.btn-reset {
+  background: transparent;
+  border: 1.5px solid rgba(255,255,255,0.25);
+  color: rgba(255,255,255,0.6);
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 12px;
+  cursor: pointer;
+  font-family: 'Inter', sans-serif;
+  transition: all 0.2s;
+  align-self: flex-end;
+  white-space: nowrap;
+}
+.btn-reset:hover { border-color: var(--crimson-light); color: white; }
+
+.dup-toggle {
+  display: flex;
+  gap: 6px;
+  align-self: flex-end;
+  flex-wrap: wrap;
+}
+.dup-btn {
+  background: rgba(255,255,255,0.08);
+  border: 1.5px solid rgba(255,255,255,0.2);
+  color: rgba(255,255,255,0.7);
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 11.5px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: 'Inter', sans-serif;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+.dup-btn:hover, .dup-btn.active {
+  background: var(--crimson);
+  border-color: var(--crimson);
+  color: white;
+}
+button[onclick^="setSex"]:hover, button[onclick^="setSex"].active {
+  background: var(--navy);
+  border-color: var(--navy);
+}
+
+/* ── BODY GRID ── */
+.body-grid {
+  display: grid;
+  grid-template-columns: 1fr 420px;
+  gap: 16px;
+  padding: 16px 24px 0;
+}
+
+/* ── CHART CARD ── */
+.chart-card {
+  background: var(--card-bg);
+  border-radius: var(--radius);
+  padding: 18px;
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255,255,255,0.55);
+}
+.chart-card-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-dark);
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.chart-card-title .badge {
+  font-size: 11px;
+  font-weight: 600;
+  background: rgba(155,28,58,0.1);
+  color: var(--crimson);
+  padding: 2px 8px;
+  border-radius: 10px;
+}
+
+/* ── WORLD MAP ── */
+#world-map-svg {
+  width: 100%;
+  height: 260px;
+  background: #d6e8f5;
+  border-radius: 8px;
+  overflow: hidden;
+}
+.map-bubble {
+  fill: var(--crimson);
+  opacity: 0.7;
+  transition: opacity 0.2s, r 0.2s;
+}
+.map-bubble:hover { opacity: 1; }
+
+/* ── NATIONALITY BAR CHART ── */
+.nat-bar-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 7px;
+}
+.nat-bar-label {
+  width: 90px;
+  font-size: 12px;
+  color: var(--text-mid);
+  text-align: right;
+  flex-shrink: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.nat-bar-track {
+  flex: 1;
+  height: 18px;
+  background: #f0e8eb;
+  border-radius: 3px;
+  overflow: hidden;
+}
+.nat-bar-fill {
+  height: 100%;
+  background: var(--crimson);
+  border-radius: 3px;
+  transition: width 0.5s ease;
+  display: flex; align-items: center;
+}
+.nat-bar-val {
+  width: 44px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--crimson);
+  flex-shrink: 0;
+}
+
+/* ── RIGHT PANEL ── */
+.right-panel { display: flex; flex-direction: column; gap: 16px; }
+
+/* GENDER CARD */
+.gender-card {
+  background: var(--card-bg);
+  border-radius: var(--radius);
+  padding: 18px;
+  box-shadow: var(--shadow);
+  border: 1px solid rgba(255,255,255,0.55);
+}
+.gender-title { font-size: 13px; font-weight: 700; color: var(--text-dark); margin-bottom: 14px; }
+.gender-bar-wrap { display: flex; gap: 2px; height: 28px; border-radius: 6px; overflow: hidden; margin-bottom: 10px; }
+.gender-bar { height: 100%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color: white; transition: width 0.5s ease; }
+.gender-legend { display: flex; gap: 16px; }
+.gender-legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-mid); }
+.gender-dot { width: 10px; height: 10px; border-radius: 50%; }
+
+/* PROGRAM CARD */
+.program-card {
+  background: var(--card-bg);
+  border-radius: var(--radius);
+  padding: 18px;
+  box-shadow: var(--shadow);
+  border: 1px solid rgba(255,255,255,0.55);
+  flex: 1;
+}
+
+/* ── TABLE SECTION ── */
+.table-section {
+  padding: 16px 24px 0;
+}
+.table-card {
+  background: var(--card-bg);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  border: 1px solid rgba(255,255,255,0.55);
+  overflow: hidden;
+}
+.table-header {
+  padding: 14px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid rgba(0,0,0,0.08);
+  background: rgba(155,28,58,0.04);
+}
+.table-header-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-dark);
+  display: flex; align-items: center; gap: 8px;
+}
+.dup-badge {
+  background: rgba(245,158,11,0.15);
+  color: #b45309;
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-weight: 600;
+}
+.table-tabs { display: flex; gap: 6px; }
+.tab-btn {
+  background: #f0e8eb;
+  border: none;
+  color: var(--text-mid);
+  padding: 5px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: 'Inter', sans-serif;
+  transition: all 0.2s;
+}
+.tab-btn:hover, .tab-btn.active {
+  background: var(--crimson);
+  color: white;
+}
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+thead th {
+  background: #faf5f7;
+  color: var(--text-mid);
+  font-weight: 700;
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  padding: 10px 14px;
+  text-align: left;
+  white-space: nowrap;
+  cursor: pointer;
+  border-bottom: 2px solid #e8dde0;
+  user-select: none;
+}
+thead th:hover { color: var(--crimson); }
+thead th.sorted { color: var(--crimson); }
+tbody tr { border-bottom: 1px solid #f0eaec; transition: background 0.12s; }
+tbody tr:hover { background: #fdf5f7; }
+tbody tr.dup-row { background: #fffbf2; }
+tbody tr.dup-row:hover { background: #fff5e0; }
+td { padding: 10px 14px; color: var(--text-dark); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 180px; }
+
+.chip { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600; }
+.chip.campus { background: #eef2ff; color: #3730a3; }
+.chip.male { background: #e8f0fb; color: var(--navy); }
+.chip.female { background: #fdecef; color: var(--crimson); }
+.chip.grad { background: #dcfce7; color: #15803d; }
+.chip.withdrawn { background: #fee2e2; color: #dc2626; }
+.chip.active-s { background: #e8f0fb; color: var(--navy); }
+.chip.dup { background: #fef3c7; color: #b45309; }
+
+.pagination {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 18px; font-size: 12px; color: var(--text-light);
+  border-top: 1px solid rgba(0,0,0,0.07);
+}
+.page-btns { display: flex; gap: 4px; }
+.page-btn {
+  background: #f5eef0; border: none; color: var(--text-mid);
+  width: 28px; height: 28px; border-radius: 6px; font-size: 12px;
+  cursor: pointer; font-family: 'Inter', sans-serif;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.15s;
+}
+.page-btn:hover, .page-btn.active { background: var(--crimson); color: white; }
+.page-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+/* ── MODAL ── */
+.modal-backdrop {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,0.65); z-index: 300;
+  align-items: center; justify-content: center;
+}
+.modal-backdrop.open { display: flex; }
+.modal {
+  background: white; border-radius: 16px;
+  width: 540px; max-width: 92vw; max-height: 82vh;
+  overflow-y: auto; padding: 26px; position: relative;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+}
+.modal-close {
+  position: absolute; top: 16px; right: 16px;
+  background: #f5eef0; border: none; color: var(--text-mid);
+  width: 28px; height: 28px; border-radius: 6px; font-size: 14px;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+}
+.modal-close:hover { background: var(--crimson); color: white; }
+.modal-name { font-size: 20px; font-weight: 800; color: var(--text-dark); margin-bottom: 2px; }
+.modal-id { font-size: 12px; color: var(--text-light); margin-bottom: 16px; }
+.modal-sec-title { font-size: 10px; font-weight: 700; color: var(--text-light); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; margin-top: 14px; }
+.enroll-card { background: #fdf5f7; border: 1px solid #e8d0d8; border-radius: 8px; padding: 12px; margin-bottom: 8px; }
+.enroll-card.current { border-color: var(--crimson); }
+.enroll-row { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 4px; }
+.enroll-key { color: var(--text-light); }
+.enroll-val { color: var(--text-dark); font-weight: 600; }
+
+/* ── UPLOAD OVERLAY ── */
+.upload-overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,0.75); z-index: 400;
+  align-items: center; justify-content: center;
+}
+.upload-overlay.open { display: flex; }
+.upload-box {
+  background: white; border-radius: 16px; padding: 36px 40px;
+  text-align: center; max-width: 420px; width: 90%;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+}
+.upload-box h3 { font-size: 18px; font-weight: 800; color: var(--text-dark); margin-bottom: 8px; }
+.upload-box p { font-size: 13px; color: var(--text-light); margin-bottom: 20px; line-height: 1.6; }
+.upload-drop {
+  border: 2.5px dashed #d0b0ba;
+  border-radius: 10px;
+  padding: 30px;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-bottom: 16px;
+}
+.upload-drop:hover, .upload-drop.dragover { border-color: var(--crimson); background: #fdf5f7; }
+.upload-drop-icon { font-size: 36px; margin-bottom: 8px; }
+.upload-drop-text { font-size: 13px; color: var(--text-mid); font-weight: 600; }
+.upload-drop-sub { font-size: 11px; color: var(--text-light); margin-top: 4px; }
+.btn-close-upload {
+  background: transparent; border: 1.5px solid #d0b0ba;
+  color: var(--text-mid); padding: 8px 20px; border-radius: 8px;
+  font-size: 13px; cursor: pointer; font-family: 'Inter', sans-serif;
+}
+.progress-wrap { margin-top: 14px; display: none; }
+.progress-bar { height: 6px; background: #f0e8eb; border-radius: 3px; overflow: hidden; }
+.progress-fill { height: 100%; background: var(--crimson); border-radius: 3px; transition: width 0.3s; }
+.progress-label { font-size: 11px; color: var(--text-light); margin-top: 6px; }
+
+/* ── EMPTY ── */
+.empty { padding: 32px; text-align: center; color: var(--text-light); font-size: 13px; }
+.empty-icon { font-size: 28px; margin-bottom: 8px; opacity: 0.4; }
+
+/* scrollbar */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #d0b0ba; border-radius: 3px; }
+</style>
+</head>
+<body>
+<div class="hero-bg"></div>
+<div class="wrapper">
+
+<!-- ════ HEADER ════ -->
+<div class="header">
+  <div class="logo-box">
+    <div style="width:32px;height:32px;border:2.5px solid var(--crimson);border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12 3L2 8l10 5 10-5-10-5z" stroke="var(--crimson)" stroke-width="1.8" stroke-linejoin="round"/>
+        <path d="M6 10.5V16c0 1.5 2.5 3 6 3s6-1.5 6-3v-5.5" stroke="var(--crimson)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+    <div style="display:flex;flex-direction:column;line-height:1;">
+      <span class="logo-text-top">DEMO</span>
+      <span class="logo-text-main">EduTrack</span>
+      <span class="logo-text-sub">SAMPLE PROJECT</span>
+    </div>
+  </div>
+  <div class="header-title">
+    Alumni Data Dashboard
+    <span>Student Records Management System</span>
+  </div>
+  <div class="header-spacer"></div>
+
+  <div class="upload-btn-wrap">
+    <button class="upload-btn" onclick="document.getElementById('upload-overlay').classList.add('open')">
+      📂 Load Excel Data
+    </button>
+    <div class="upload-status" id="upload-status">No data loaded</div>
+  </div>
+</div>
+
+<!-- ════ KPI ROW ════ -->
+<div class="kpi-row">
+  <div class="kpi-card">
+    <div class="kpi-value" id="kpi-total">16K</div>
+    <div class="kpi-label">Total Alumni</div>
+  </div>
+  <div class="kpi-card">
+    <div class="kpi-value" id="kpi-unique">—</div>
+    <div class="kpi-label">Unique Students</div>
+  </div>
+  <div class="kpi-card">
+    <div class="kpi-value" id="kpi-programs">—</div>
+    <div class="kpi-label">Total Programs</div>
+  </div>
+  <div class="kpi-card">
+    <div class="kpi-value" id="kpi-program-versions">—</div>
+    <div class="kpi-label">Total Program Versions</div>
+  </div>
+  <div class="kpi-card">
+    <div class="kpi-value" id="kpi-campuses">—</div>
+    <div class="kpi-label"># Campuses</div>
+  </div>
+  <div class="kpi-card">
+    <div class="kpi-value" id="kpi-nationalities">—</div>
+    <div class="kpi-label">Total Nationality</div>
+  </div>
+  <div class="kpi-card">
+    <div class="kpi-value" id="kpi-multi">—</div>
+    <div class="kpi-label">Multi-Entry Students</div>
+  </div>
+  <div class="kpi-card">
+    <div class="kpi-value" id="kpi-grad">—</div>
+    <div class="kpi-label">Graduated</div>
+  </div>
+  <div class="kpi-card">
+    <div class="kpi-value" id="kpi-sis">—</div>
+    <div class="kpi-label">Enrolled in SIS (Enrollment #)</div>
+  </div>
+  <div class="kpi-card">
+    <div class="kpi-value" id="kpi-noid">—</div>
+    <div class="kpi-label">Students without Student #</div>
+  </div>
+</div>
+
+<!-- ════ CAMPUS PILLS ════ -->
+<div class="campus-row">
+  <div class="campus-label">Campus</div>
+  <div class="campus-pills" id="campus-pills"></div>
+</div>
+
+<!-- ════ FILTERS ════ -->
+<div class="filter-bar">
+  <div class="filter-group">
+    <label>Search</label>
+    <input type="text" id="search-input" placeholder="Name, Student #, Program…">
+  </div>
+  <div class="filter-group">
+    <label>Program</label>
+    <select id="program-filter"><option value="">All Programs</option></select>
+  </div>
+  <div class="filter-group">
+    <label>Program Version</label>
+    <select id="degree-filter"><option value="">All Program Versions</option></select>
+  </div>
+  <div class="filter-group">
+    <label>Nationality</label>
+    <select id="nationality-filter"><option value="">All Nationalities</option></select>
+  </div>
+  <div class="filter-group">
+    <label>Country</label>
+    <select id="country-filter"><option value="">All Countries</option></select>
+  </div>
+
+  <div style="display:flex;flex-direction:column;gap:4px;align-self:flex-end;">
+    <label style="font-size:10px;font-weight:600;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:1px;">Gender</label>
+    <div style="display:flex;gap:6px;">
+      <button class="dup-btn active" id="sex-all" onclick="setSex('',this)">All</button>
+      <button class="dup-btn" id="sex-female" onclick="setSex('Female',this)">Female</button>
+      <button class="dup-btn" id="sex-male" onclick="setSex('Male',this)">Male</button>
+    </div>
+  </div>
+
+  <div style="display:flex;flex-direction:column;gap:4px;align-self:flex-end;">
+    <label style="font-size:10px;font-weight:600;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:1px;">Student Type</label>
+    <div class="dup-toggle">
+      <button class="dup-btn active" onclick="setDup('all',this)">All</button>
+      <button class="dup-btn" onclick="setDup('multi-campus',this)">⚠ Multi-Campus</button>
+      <button class="dup-btn" onclick="setDup('multi-program',this)">Multi-Program</button>
+      <button class="dup-btn" onclick="setDup('unique',this)">Single Entry</button>
+    </div>
+  </div>
+
+  <button class="btn-reset" onclick="resetFilters()">↺ Reset</button>
+</div>
+
+<!-- ════ BODY GRID ════ -->
+<div class="body-grid">
+
+  <!-- LEFT: Map + Nationality -->
+  <div style="display:flex;flex-direction:column;gap:16px;">
+
+    <div class="chart-card">
+      <div class="chart-card-title">
+        #Students by Nationality — World Map
+        <span class="badge" id="map-count">—</span>
+      </div>
+      <svg id="world-map-svg" viewBox="0 0 900 440">
+        <!-- Simplified world map paths -->
+        <rect width="900" height="440" fill="#cfe5f5"/>
+        <!-- Continents simplified -->
+        <!-- North America -->
+        <path d="M80,60 L200,55 L230,90 L240,140 L210,180 L180,200 L150,220 L120,240 L90,200 L60,170 L50,130 L60,90 Z" fill="#b8d4e8" stroke="#a0b8cc" stroke-width="1"/>
+        <!-- Central America -->
+        <path d="M150,220 L180,200 L190,240 L175,260 L155,255 Z" fill="#b8d4e8" stroke="#a0b8cc" stroke-width="1"/>
+        <!-- South America -->
+        <path d="M160,265 L220,255 L260,280 L270,340 L250,400 L200,420 L160,400 L140,350 L140,300 Z" fill="#b8d4e8" stroke="#a0b8cc" stroke-width="1"/>
+        <!-- Europe -->
+        <path d="M380,50 L450,45 L470,70 L460,110 L420,120 L390,100 L370,80 Z" fill="#b8d4e8" stroke="#a0b8cc" stroke-width="1"/>
+        <!-- Scandinavia -->
+        <path d="M400,20 L440,15 L450,45 L420,50 L400,40 Z" fill="#b8d4e8" stroke="#a0b8cc" stroke-width="1"/>
+        <!-- Africa -->
+        <path d="M390,130 L460,120 L490,160 L500,230 L480,310 L440,350 L400,340 L370,290 L360,220 L370,160 Z" fill="#b8d4e8" stroke="#a0b8cc" stroke-width="1"/>
+        <!-- Middle East -->
+        <path d="M460,110 L530,100 L550,140 L520,160 L480,155 L465,130 Z" fill="#b8d4e8" stroke="#a0b8cc" stroke-width="1"/>
+        <!-- Asia (main) -->
+        <path d="M530,30 L720,25 L760,60 L750,120 L700,150 L640,140 L580,130 L540,100 L520,70 Z" fill="#b8d4e8" stroke="#a0b8cc" stroke-width="1"/>
+        <!-- India -->
+        <path d="M580,140 L630,135 L640,180 L610,220 L580,200 L565,165 Z" fill="#b8d4e8" stroke="#a0b8cc" stroke-width="1"/>
+        <!-- Southeast Asia -->
+        <path d="M680,150 L740,145 L760,180 L730,200 L690,190 Z" fill="#b8d4e8" stroke="#a0b8cc" stroke-width="1"/>
+        <!-- China/East Asia -->
+        <path d="M650,60 L760,55 L780,100 L750,130 L700,140 L660,120 L640,90 Z" fill="#b8d4e8" stroke="#a0b8cc" stroke-width="1"/>
+        <!-- Japan -->
+        <path d="M780,70 L810,65 L820,90 L800,100 L785,85 Z" fill="#b8d4e8" stroke="#a0b8cc" stroke-width="1"/>
+        <!-- Australia -->
+        <path d="M720,290 L820,280 L850,320 L840,370 L790,390 L730,375 L700,340 L705,300 Z" fill="#b8d4e8" stroke="#a0b8cc" stroke-width="1"/>
+        <!-- Greenland -->
+        <path d="M260,10 L320,5 L330,40 L300,50 L265,35 Z" fill="#c8dcea" stroke="#a0b8cc" stroke-width="1"/>
+        <!-- UK -->
+        <path d="M362,52 L378,48 L382,65 L370,68 Z" fill="#b8d4e8" stroke="#a0b8cc" stroke-width="0.8"/>
+
+        <!-- Bubble layer -->
+        <g id="map-bubbles"></g>
+        <!-- Tooltip -->
+        <g id="map-tooltip" opacity="0">
+          <rect id="tt-bg" rx="4" fill="rgba(26,10,15,0.85)"/>
+          <text id="tt-text" fill="white" font-size="11" font-family="Inter,sans-serif"></text>
+        </g>
+      </svg>
+    </div>
+
+    <div class="chart-card">
+      <div class="chart-card-title">
+        Count of Students by Nationality (Top 15)
+      </div>
+      <div id="nat-chart"></div>
+    </div>
+
+  </div>
+
+  <!-- RIGHT PANEL -->
+  <div class="right-panel">
+
+    <div class="gender-card">
+      <div class="gender-title">Gender Distribution</div>
+      <div class="gender-bar-wrap">
+        <div class="gender-bar" id="gender-bar-f" style="width:50%;background:#9b1c3a;">F</div>
+        <div class="gender-bar" id="gender-bar-m" style="width:50%;background:#1b3a6b;">M</div>
+      </div>
+      <div class="gender-legend">
+        <div class="gender-legend-item">
+          <div class="gender-dot" style="background:#9b1c3a;"></div>
+          <span>Female: <strong id="gender-f-val">—</strong></span>
+        </div>
+        <div class="gender-legend-item">
+          <div class="gender-dot" style="background:#1b3a6b;"></div>
+          <span>Male: <strong id="gender-m-val">—</strong></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="program-card">
+      <div class="chart-card-title">
+        Programs by Campus
+        <span class="badge" id="prog-campus-badge">—</span>
+      </div>
+      <div id="prog-campus-chart"></div>
+    </div>
+
+    <div class="chart-card" style="flex:1;">
+      <div class="chart-card-title">
+        Program Version Breakdown (Top 15)
+        <span class="badge" id="degree-badge">—</span>
+      </div>
+      <div id="degree-chart"></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ════ TABLE ════ -->
+<div class="table-section">
+  <div class="table-card">
+    <div class="table-header">
+      <div class="table-header-title">
+        Student Records
+        <span class="dup-badge" id="dup-badge">— multi-entry</span>
+      </div>
+      <div class="table-tabs">
+        <button class="tab-btn active" onclick="setView('all',this)">All</button>
+        <button class="tab-btn" onclick="setView('multi',this)">⚠ Multi-Entry</button>
+        <button class="tab-btn" onclick="setView('unique',this)">Single Entry</button>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th onclick="sortBy('studentNum',this)">Student # ↕</th>
+            <th onclick="sortBy('name',this)">Name ↕</th>
+            <th onclick="sortBy('campus',this)">Campus ↕</th>
+            <th onclick="sortBy('sex',this)">Gender ↕</th>
+            <th onclick="sortBy('dob',this)">Date of Birth ↕</th>
+            <th onclick="sortBy('nationality',this)">Nationality ↕</th>
+            <th onclick="sortBy('program',this)">Program ↕</th>
+            <th onclick="sortBy('programVersion',this)">Program Version ↕</th>
+            <th onclick="sortBy('startDate',this)">Start Date ↕</th>
+            <th>Status</th>
+            <th>Entries</th>
+          </tr>
+        </thead>
+        <tbody id="table-body"></tbody>
+      </table>
+    </div>
+    <div class="pagination">
+      <span id="pagination-info">Showing 0 of 0 students</span>
+      <div class="page-btns" id="page-btns"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ════ FOOTER ════ -->
+<div style="margin-top:28px;padding:18px 6px 6px;border-top:1px solid rgba(0,0,0,0.08);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;font-size:12px;color:#8a8a8a;">
+  <div>EduTrack — Alumni Data Dashboard (Sample Project with Dummy Data)</div>
+  <div style="text-align:right;line-height:1.5;">
+    <div style="font-weight:600;color:#555;">Dashboard created by Siddhartha Paliwal</div>
+    <div>Project Analyst &nbsp;·&nbsp; M: +91-7500714108 &nbsp;·&nbsp; E: siddharthapaliwal1@gmail.com</div>
+  </div>
+</div>
+
+</div><!-- /wrapper -->
+
+<!-- ════ STUDENT MODAL ════ -->
+<div class="modal-backdrop" id="modal-backdrop" onclick="closeModal(event)">
+  <div class="modal">
+    <button class="modal-close" onclick="document.getElementById('modal-backdrop').classList.remove('open')">✕</button>
+    <div class="modal-name" id="modal-name"></div>
+    <div class="modal-id" id="modal-id"></div>
+    <div class="modal-sec-title">Demographics</div>
+    <div id="modal-demo"></div>
+    <div class="modal-sec-title">Enrollment History</div>
+    <div id="modal-enrollments"></div>
+  </div>
+</div>
+
+<!-- ════ UPLOAD OVERLAY ════ -->
+<div class="upload-overlay" id="upload-overlay">
+  <div class="upload-box">
+    <h3>📊 Load Your Excel Data</h3>
+    <p>Upload your Excel file (.xlsx) with student records.<br>
+    <strong>No data is sent to any server</strong> — everything processes locally in your browser.</p>
+
+    <div class="upload-drop" id="upload-drop"
+      ondragover="event.preventDefault();this.classList.add('dragover')"
+      ondragleave="this.classList.remove('dragover')"
+      ondrop="handleDrop(event)"
+      onclick="document.getElementById('file-input').click()">
+      <div class="upload-drop-icon">📁</div>
+      <div class="upload-drop-text">Click or drag your .xlsx file here</div>
+      <div class="upload-drop-sub">Supports up to 100,000+ rows</div>
+    </div>
+    <input type="file" id="file-input" accept=".xlsx,.xls" onchange="handleFile(this.files[0])">
+
+    <div style="display:flex;align-items:center;gap:10px;margin:18px 0;">
+      <div style="flex:1;height:1px;background:#e5dfd8;"></div>
+      <span style="font-size:11px;color:#999;font-weight:600;letter-spacing:0.5px;">OR LOAD FROM A LINK</span>
+      <div style="flex:1;height:1px;background:#e5dfd8;"></div>
+    </div>
+    <p style="font-size:12px;color:var(--text-light);margin-bottom:10px;line-height:1.5;">
+      Paste a direct, publicly-accessible link to your Excel file — e.g. a OneDrive/SharePoint
+      "direct download" link, a Google Sheets file <em>published as .xlsx</em>, or a raw GitHub/Drive link.
+      The file must allow CORS access from the browser; if loading fails, download it and use the file picker above instead.
+    </p>
+    <div style="display:flex;gap:8px;margin-bottom:6px;">
+      <input type="url" id="excel-url-input" placeholder="https://your-link-to-file.xlsx"
+        style="flex:1;padding:10px 12px;border:1.5px solid #ddd5cc;border-radius:8px;font-size:13px;font-family:'Inter',sans-serif;">
+      <button class="upload-btn" style="background:var(--crimson);border-color:var(--crimson);white-space:nowrap;"
+        onclick="loadFromUrl()">Load Link</button>
+    </div>
+    <div id="url-load-status" style="font-size:11.5px;color:var(--text-light);min-height:16px;"></div>
+
+    <div class="progress-wrap" id="progress-wrap">
+      <div class="progress-bar"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
+      <div class="progress-label" id="progress-label">Reading file…</div>
+    </div>
+
+    <button class="btn-close-upload" onclick="document.getElementById('upload-overlay').classList.remove('open')">Cancel</button>
+  </div>
+</div>
+
+<script>
+// ──────────────────────────────────────────────
+//  EMBEDDED SAMPLE DATA (mirrors your Excel structure)
+//  When user uploads real Excel, this is replaced entirely
+// ──────────────────────────────────────────────
+const SAMPLE = [];
+
+// ─── COORDINATE MAP (country → approx SVG x,y in our viewBox 900×440) ───
+const COUNTRY_COORDS = {
+  "USA": [140,130], "United States": [140,130], "American": [140,130],
+  "Canada": [155,75], "Mexico": [140,200],
+  "UK": [370,58], "United Kingdom": [370,58], "British": [370,58],
+  "Germany": [415,65], "German": [415,65],
+  "France": [395,80], "French": [395,80],
+  "Spain": [385,95], "Spanish": [385,95],
+  "Italy": [420,95], "Italian": [420,95],
+  "Netherlands": [400,60], "Dutch": [400,60],
+  "Sweden": [420,40], "Norwegian": [430,38], "Denmark": [415,50], "Danish": [415,50],
+  "Finland": [440,35], "Finnish": [440,35],
+  "Greece": [450,105], "Greek": [450,105],
+  "Poland": [440,65], "Polish": [440,65],
+  "Russia": [560,50], "Russian": [560,50],
+  "Turkey": [475,95], "Turkish": [475,95],
+  "Egypt": [455,155], "Egyptian": [455,155],
+  "Nigeria": [410,210], "Nigerian": [410,210],
+  "Ghana": [395,215], "Ghanaian": [395,215],
+  "Ethiopia": [470,215], "Ethiopian": [470,215],
+  "Kenya": [470,235], "Kenyan": [470,235],
+  "South Africa": [440,310], "South African": [440,310],
+  "India": [590,170], "Indian": [590,170],
+  "China": [695,90], "Chinese": [695,90],
+  "Japan": [760,95], "Japanese": [760,95],
+  "South Korea": [740,100], "South Korean": [740,100], "Korean": [740,100],
+  "Malaysia": [710,195], "Malaysian": [710,195],
+  "Thailand": [695,180], "Thai": [695,180],
+  "Indonesia": [730,215], "Indonesian": [730,215],
+  "Philippines": [745,190], "Filipino": [745,190],
+  "Australia": [775,330], "Australian": [775,330],
+  "New Zealand": [820,360],
+  "Brazil": [215,300], "Brazilian": [215,300],
+  "Argentina": [195,360], "Argentine": [195,360],
+  "Colombia": [175,245], "Colombia": [175,245],
+  "Pakistan": [575,140], "Pakistani": [575,140],
+  "Bangladesh": [625,160], "Bangladeshi": [625,160],
+  "Saudi Arabia": [500,145], "Saudi": [500,145],
+  "Iran": [530,120], "Iranian": [530,120],
+  "Iraq": [505,120], "Iraqi": [505,120],
+  "Jordan": [485,130], "Jordanian": [485,130],
+  "Lebanon": [480,120], "Lebanese": [480,120],
+  "Israel": [478,125], "Israeli": [478,125],
+  "Taiwan": [730,155], "Taiwanese": [730,155],
+  "Vietnam": [700,175], "Vietnamese": [700,175],
+  "Singapore": [715,210], "Singaporean": [715,210],
+  "Hong Kong": [720,160],
+  "Morocco": [375,130], "Moroccan": [375,130],
+  "Tunisia": [415,130], "Tunisian": [415,130],
+  "Algeria": [400,145], "Algerian": [400,145],
+  "Cameroon": [420,230], "Cameroonian": [420,230],
+  "Senegal": [375,210], "Senegalese": [375,210],
+  "Cuba": [165,190], "Cuban": [165,190],
+  "Peru": [185,295], "Peruvian": [185,295],
+  "Chile": [190,355], "Chilean": [190,355],
+  "Venezuela": [195,265], "Venezuelan": [195,265],
+  "Ecuador": [175,270], "Ecuadorian": [175,270],
+  "Bolivia": [200,310], "Bolivian": [200,310],
+  "Portugal": [370,95], "Portuguese": [370,95],
+  "Austria": [430,75], "Austrian": [430,75],
+  "Switzerland": [415,78], "Swiss": [415,78],
+  "Belgium": [398,65], "Belgian": [398,65],
+  "Denmark": [415,50], "Danish": [415,50],
+  "Hungary": [440,78], "Hungarian": [440,78],
+  "Romania": [452,78], "Romanian": [452,78],
+  "Ukraine": [462,68], "Ukrainian": [462,68],
+  "Czech Republic": [432,70], "Czech": [432,70],
+  "Slovakia": [438,73],
+  "Croatia": [435,85], "Croatian": [435,85],
+  "Serbia": [445,85], "Serbian": [445,85],
+  "Bulgaria": [453,88], "Bulgarian": [453,88],
+  "Albania": [445,92], "Albanian": [445,92],
+  "Latvia": [448,55], "Lithuanian": [445,57], "Estonian": [448,50],
+};
+
+// Canonical nationality label per map coordinate. Several spellings/variants
+// (e.g. "USA" / "United States" / "American") point at the same coordinate —
+// the LAST alias listed for a coordinate is the demonym form actually used
+// in the student data, so we use that as the single canonical label. This
+// keeps the World Map, the Nationality bar chart, and the Nationality KPI
+// all counting (and labeling) the same underlying group of unique students.
+const COORD_CANON = {};
+Object.entries(COUNTRY_COORDS).forEach(([k, v]) => { COORD_CANON[v.join(',')] = k; });
+function canonNationality(nat, country) {
+  const coord = COUNTRY_COORDS[nat] || COUNTRY_COORDS[country];
+  if (!coord) return nat || country || 'Unknown';
+  return COORD_CANON[coord.join(',')] || nat || 'Unknown';
+}
+
+// ──────────────────────────────────────────────
+//  STUDENT GROUPING (shared)
+// ──────────────────────────────────────────────
+// A "unique student" = one row-group keyed by normalized Surname + Name,
+// regardless of Student #. Every count in the dashboard (campus pills,
+// world map, nationality chart, gender split, programs by campus, program
+// version breakdown) is derived from these groups so the numbers agree
+// with each other everywhere.
+function normKey(v) { return String(v || '').trim().toUpperCase().replace(/\s+/g, ' '); }
+function groupStudentsByName(rows) {
+  const map = {};
+  rows.forEach(r => {
+    const key = normKey(r.surname) + '|' + normKey(r.name);
+    if (!map[key]) map[key] = [];
+    map[key].push(r);
+  });
+  return map;
+}
+
+// ──────────────────────────────────────────────
+//  STATE
+// ──────────────────────────────────────────────
+let allData = [];
+let filteredStudents = [];
+let activeCampuses = new Set();
+let activeSex = '';
+let dupFilter = 'all';
+let currentView = 'all';
+let sortField = 'studentNum';
+let sortAsc = true;
+let currentPage = 1;
+const PAGE_SIZE = 15;
+
+// ──────────────────────────────────────────────
+//  EXCEL FILE UPLOAD
+// ──────────────────────────────────────────────
+function handleDrop(e) {
+  e.preventDefault();
+  document.getElementById('upload-drop').classList.remove('dragover');
+  const file = e.dataTransfer.files[0];
+  if (file) handleFile(file);
+}
+
+function handleFile(file) {
+  if (!file) return;
+  const pw = document.getElementById('progress-wrap');
+  const pf = document.getElementById('progress-fill');
+  const pl = document.getElementById('progress-label');
+  pw.style.display = 'block';
+  pl.textContent = 'Reading file…';
+  pf.style.width = '20%';
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      processWorkbookData(e.target.result, 'binary', file.name);
+    } catch(err) {
+      pl.textContent = '❌ Error: ' + err.message;
+      pf.style.background = '#dc2626';
+    }
+  };
+  reader.readAsBinaryString(file);
+}
+
+// ──────────────────────────────────────────────
+//  LOAD EXCEL FROM A LINK (URL)
+// ──────────────────────────────────────────────
+async function loadFromUrl() {
+  const urlInput = document.getElementById('excel-url-input');
+  const statusEl = document.getElementById('url-load-status');
+  const url = (urlInput.value || '').trim();
+  if (!url) { statusEl.textContent = 'Please paste a link to your Excel file first.'; statusEl.style.color = '#c0274f'; return; }
+
+  const pw = document.getElementById('progress-wrap');
+  const pf = document.getElementById('progress-fill');
+  const pl = document.getElementById('progress-label');
+  pw.style.display = 'block';
+  pl.textContent = 'Fetching file from link…';
+  pf.style.width = '15%';
+  statusEl.textContent = 'Fetching…';
+  statusEl.style.color = 'var(--text-light)';
+
+  try {
+    const resp = await fetch(url, { mode: 'cors' });
+    if (!resp.ok) throw new Error('Server returned ' + resp.status + ' ' + resp.statusText);
+    pf.style.width = '40%';
+    pl.textContent = 'Reading file…';
+    const buf = await resp.arrayBuffer();
+    const fileName = url.split('/').pop().split('?')[0] || 'linked-file.xlsx';
+    processWorkbookData(buf, 'array', fileName);
+    statusEl.textContent = '✓ Loaded successfully from link';
+    statusEl.style.color = '#1a7a3c';
+  } catch (err) {
+    pl.textContent = '❌ Error loading link';
+    pf.style.background = '#dc2626';
+    statusEl.textContent = '❌ Could not load that link (' + err.message + '). The host may block cross-origin (CORS) access — try a direct-download / "publish to web as .xlsx" link, or download the file and use the file picker above instead.';
+    statusEl.style.color = '#c0274f';
+  }
+}
+
+// ──────────────────────────────────────────────
+//  SHARED: PARSE WORKBOOK → allData
+//  type: 'binary' (FileReader binary string) or 'array' (ArrayBuffer from fetch)
+// ──────────────────────────────────────────────
+function processWorkbookData(rawData, type, sourceName) {
+  const pf = document.getElementById('progress-fill');
+  const pl = document.getElementById('progress-label');
+
+  // Recognize academic-term strings like "Spring 1994" / "Fall 1994" and
+  // leave them exactly as given instead of trying to convert them to a date.
+  const TERM_RE = /^(spring|summer|fall|autumn|winter)\s*\d{4}$/i;
+
+  // Extract {y, m, d} (1-indexed month/day) directly from a value WITHOUT ever
+  // routing it through a timezone-sensitive Date object, except where
+  // unavoidable (Excel serial numbers, native Date objects from XLSX — both
+  // of which are UTC-based and read back with UTC getters so no day is lost).
+  // This is what fixes the "01-02-2026 displays as 01-01-2026" bug: plain
+  // date strings are now parsed by literal digit position, never reinterpreted
+  // through the browser's local timezone.
+  function getDateParts(v) {
+    if (v instanceof Date) {
+      if (isNaN(v.getTime())) return null;
+      return { y: v.getUTCFullYear(), m: v.getUTCMonth() + 1, d: v.getUTCDate() };
+    }
+    if (typeof v === 'number') {
+      // Excel serial date (days since 1899-12-30), computed purely in UTC.
+      const dt = new Date(Date.UTC(1899, 11, 30) + Math.round(v) * 86400000);
+      return { y: dt.getUTCFullYear(), m: dt.getUTCMonth() + 1, d: dt.getUTCDate() };
+    }
+    const s = String(v).trim();
+    if (!s) return null;
+
+    // ISO: YYYY-MM-DD (optionally with a time component) — read digits directly.
+    let m = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+    if (m) return { y: +m[1], m: +m[2], d: +m[3] };
+
+    // MM-DD-YYYY or MM/DD/YYYY — read digits directly, exactly as written in the source.
+    // (Tolerates an optional trailing time component, e.g. "01-02-2026 00:00:00".)
+    m = s.match(/^(\d{1,2})[-\/](\d{1,2})[-\/](\d{4})(?=$|[\sT])/);
+    if (m) return { m: +m[1], d: +m[2], y: +m[3] };
+
+    return null;
+  }
+
+  // Format a date value as MM-DD-YYYY. Term strings (Spring 1994, Fall 1994…)
+  // and any other non-date text are returned completely unchanged.
+  function fmtDate(v) {
+    if (v === null || v === undefined || v === '') return '';
+    if (typeof v === 'string') {
+      const s = v.trim();
+      if (!s || s === '-') return s;
+      if (TERM_RE.test(s)) return s.replace(/\s+/g, ' ');
+      if (!/\d/.test(s)) return s;
+    }
+    const p = getDateParts(v);
+    if (!p) return String(v).trim(); // unrecognized format — leave exactly as-is
+    return `${String(p.m).padStart(2,'0')}-${String(p.d).padStart(2,'0')}-${p.y}`;
+  }
+
+  // Date of Birth uses an abbreviated month name, e.g. "May-27-1996".
+  const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  function fmtDOB(v) {
+    if (v === null || v === undefined || v === '') return '';
+    if (typeof v === 'string') {
+      const s = v.trim();
+      if (!s || s === '-') return s;
+      if (!/\d/.test(s)) return s;
+    }
+    const p = getDateParts(v);
+    if (!p) return String(v).trim();
+    return `${MONTHS[p.m-1]}-${String(p.d).padStart(2,'0')}-${p.y}`;
+  }
+
+  pf.style.width = '50%';
+  pl.textContent = 'Parsing rows…';
+  // cellDates is intentionally left OFF. When SheetJS auto-converts date
+  // cells to native JS Date objects, that conversion happens inside the
+  // library and is the actual source of the "01-02-2026 shows as
+  // 01-01-2026" bug — it's an extra hop we don't control. Instead we keep
+  // date cells as raw Excel serial numbers (cellDates:false) and convert
+  // them ourselves in getDateParts() using a single, auditable, pure-UTC
+  // calculation (Date.UTC(1899,11,30) + days*86400000), so the day/month/
+  // year displayed always matches what's in the source file exactly.
+  const wb = XLSX.read(rawData, { type, cellDates: false, raw: true });
+  const sheet = wb.Sheets[wb.SheetNames[0]];
+  const raw = XLSX.utils.sheet_to_json(sheet, { defval: '', raw: true });
+
+  pf.style.width = '75%';
+  pl.textContent = 'Processing ' + raw.length + ' rows…';
+
+  // Try to map columns flexibly
+  const colMap = {};
+  if (raw.length > 0) {
+    const keys = Object.keys(raw[0]);
+    const norm = s => String(s).toLowerCase().replace(/[^a-z0-9]/g,'');
+    const usedCols = new Set();
+    const find = (...names) => {
+      const k = keys.find(k => !usedCols.has(k) && names.some(n => norm(k).includes(norm(n))));
+      if (k) usedCols.add(k);
+      return k || '';
+    };
+    colMap.studentNum = find('Student#','student number','studentnum','student #','student id','studentid','stuno','stu#','student no');
+    colMap.enrollNum = find('Enrollment#','enrollmentnum','enrollment');
+    // Surname is matched BEFORE Name and removed from the candidate pool,
+    // so "Name" can no longer accidentally re-match the "Surname" column.
+    colMap.surname = find('Surname','lastname','last name');
+    colMap.name = find('First Name','firstname','name');
+    // Fallback: if headers are ambiguous/missing, use the expected fixed
+    // positions — column D (index 3) = Surname, column E (index 4) = First Name.
+    if (!colMap.surname && keys[3]) { colMap.surname = keys[3]; usedCols.add(keys[3]); }
+    if (!colMap.name && keys[4]) { colMap.name = keys[4]; usedCols.add(keys[4]); }
+    colMap.campus = find('Campus');
+    colMap.sex = find('Sex','gender');
+    colMap.nationality = find('Nationality');
+    colMap.dob = find('Date of Birth','dob','dateofbirth','birth');
+    colMap.program = find('Program Name','program');
+    colMap.programVersion = find('Program Version','programversion','degree','version');
+    colMap.startDate = find('Start Date','startdate','start');
+    colMap.withdrawal = find('Withdrawal','withdrew');
+    colMap.gradDate = find('Grad Date','graddate','graduation');
+    colMap.country = find('Country');
+    colMap.status = find('Status');
+    colMap.spLink = find('Link to the folder in SP','link to folder','sp folder','sharepoint link','folder link');
+    // Fallback to fixed column letters if headers weren't matched by name:
+    // Column Y = 25th column (index 24), Column Z = 26th column (index 25).
+    if (!colMap.spLink && keys[24]) { colMap.spLink = keys[24]; usedCols.add(keys[24]); }
+    if (!colMap.status && keys[25]) { colMap.status = keys[25]; usedCols.add(keys[25]); }
+  }
+
+  // Keep ALL rows — including students missing a Student #.
+  // Rows without a valid numeric Student # get a unique placeholder ID
+  // (NOID-1, NOID-2…) so they still appear individually instead of being dropped.
+  let noIdCounter = 0;
+  const isStudentRow = r => {
+    // Skip totally blank rows. Instead of checking Name/Surname/Student#
+    // (which are prone to stray whitespace causing false positives),
+    // a row is only kept if it has a real Status (col Z) or a real
+    // Link to the folder in SP (col Y) — these are reliably empty on
+    // truly blank trailing rows.
+    const status = String(r[colMap.status] || '').trim();
+    const spLink = String(r[colMap.spLink] || '').trim();
+    return !!(status || spLink);
+  };
+
+  setTimeout(() => {
+    allData = raw.filter(isStudentRow).map(r => {
+      const rawVal = r[colMap.studentNum];
+      // "Missing Student #" now means the cell itself is blank/empty —
+      // any non-blank value counts as a valid ID, whatever format it's in
+      // (pure digits, "SIS-1234", leading text, etc.).
+      const rawTrim = (typeof rawVal === 'number') ? String(rawVal) : String(rawVal || '').trim();
+      const hasValidId = rawTrim !== '';
+      let sn;
+      if (hasValidId) {
+        if (typeof rawVal === 'number') {
+          sn = String(Math.trunc(rawVal)); // numeric cell — drop any stray decimal (e.g. 20100.0 -> "20100")
+        } else {
+          sn = rawTrim
+            .replace(/[,\s]/g, '')   // strip thousand-separators / stray spaces
+            .replace(/\.0+$/, '');   // strip trailing ".0" some spreadsheets add to numeric-as-text cells
+        }
+      }
+      if (!hasValidId) {
+        noIdCounter++;
+        sn = 'NOID-' + noIdCounter;
+      }
+      return {
+        studentNum: sn,
+        missingStudentNum: !hasValidId,
+        enrollNum: String(r[colMap.enrollNum] || '').trim(),
+        surname: String(r[colMap.surname] || '').trim(),
+        name: String(r[colMap.name] || '').trim(),
+        campus: String(r[colMap.campus] || '').trim(),
+        sex: String(r[colMap.sex] || '').trim(),
+        nationality: String(r[colMap.nationality] || '').trim(),
+        dob: fmtDOB(r[colMap.dob]),
+        program: String(r[colMap.program] || '-').trim(),
+        programVersion: String(r[colMap.programVersion] || '-').trim(),
+        startDate: fmtDate(r[colMap.startDate]),
+        withdrawal: fmtDate(r[colMap.withdrawal]),
+        gradDate: fmtDate(r[colMap.gradDate]),
+        country: String(r[colMap.country] || '').trim(),
+        status: String(r[colMap.status] || '').trim(),
+        spLink: String(r[colMap.spLink] || '').trim(),
+      };
+    });
+
+    pf.style.width = '100%';
+    pl.textContent = '✓ Loaded ' + allData.length.toLocaleString() + ' records';
+    document.getElementById('upload-status').textContent = '✓ ' + sourceName + ' · ' + allData.length.toLocaleString() + ' rows';
+
+    activeCampuses.clear();
+    activeSex = '';
+    dupFilter = 'all';
+    currentView = 'all';
+
+    rebuildFilters();
+    applyFilters();
+
+    setTimeout(() => {
+      document.getElementById('upload-overlay').classList.remove('open');
+      document.getElementById('progress-wrap').style.display = 'none';
+      pf.style.width = '0%';
+    }, 1200);
+  }, 100);
+}
+
+// ──────────────────────────────────────────────
+//  INIT
+// ──────────────────────────────────────────────
+function init() {
+  allData = SAMPLE;
+  rebuildFilters();
+  applyFilters();
+  if (allData.length === 0) {
+    document.getElementById('upload-status').textContent = 'No data loaded — upload your Excel file';
+    document.getElementById('upload-overlay').classList.add('open');
+  }
+}
+
+// ──────────────────────────────────────────────
+//  BUILD SIDEBAR FILTERS
+// ──────────────────────────────────────────────
+function rebuildFilters() {
+  const campuses = [...new Set(allData.map(r => r.campus).filter(Boolean))].sort();
+  const programs = [...new Set(allData.map(r => r.program).filter(v => v && v !== '-'))].sort();
+  const degrees  = [...new Set(allData.map(r => r.programVersion).filter(v => v && v !== '-'))].sort();
+  const nats     = [...new Set(allData.map(r => r.nationality).filter(Boolean))].sort();
+  const countries= [...new Set(allData.map(r => r.country).filter(Boolean))].sort();
+
+  // Campus pills — count unique students (by Surname+Name) who have at
+  // least one record at that campus, not raw enrollment rows.
+  const allStudentGroups = Object.values(groupStudentsByName(allData));
+  const cpEl = document.getElementById('campus-pills');
+  cpEl.innerHTML = '';
+  campuses.forEach(c => {
+    const count = allStudentGroups.filter(rows => rows.some(r => r.campus === c)).length;
+    const btn = document.createElement('button');
+    btn.className = 'campus-pill';
+    btn.dataset.campus = c;
+    btn.innerHTML = `${c} <span class="cp-count">${count}</span>`;
+    btn.onclick = () => toggleCampus(c, btn);
+    cpEl.appendChild(btn);
+  });
+
+  // Selects
+  const fill = (id, arr) => {
+    const el = document.getElementById(id);
+    const cur = el.value;
+    el.innerHTML = `<option value="">All</option>` + arr.map(v => `<option value="${v}">${v}</option>`).join('');
+    el.value = arr.includes(cur) ? cur : '';
+  };
+  fill('program-filter', programs);
+  fill('degree-filter', degrees);
+  fill('nationality-filter', nats);
+  fill('country-filter', countries);
+
+  ['program-filter','degree-filter','nationality-filter','country-filter'].forEach(id =>
+    document.getElementById(id).addEventListener('change', applyFilters));
+  document.getElementById('search-input').addEventListener('input', applyFilters);
+}
+
+// ──────────────────────────────────────────────
+//  FILTER HELPERS
+// ──────────────────────────────────────────────
+function toggleCampus(c, btn) {
+  if (activeCampuses.has(c)) { activeCampuses.delete(c); btn.classList.remove('active'); }
+  else { activeCampuses.add(c); btn.classList.add('active'); }
+  applyFilters();
+}
+function setSex(val, btn) {
+  activeSex = val;
+  document.querySelectorAll('#sex-all,#sex-female,#sex-male').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  applyFilters();
+}
+function setDup(val, btn) {
+  dupFilter = val;
+  document.querySelectorAll('.dup-toggle .dup-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  applyFilters();
+}
+function setView(val, btn) {
+  currentView = val;
+  document.querySelectorAll('.table-tabs .tab-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  currentPage = 1;
+  renderTable();
+}
+function resetFilters() {
+  activeCampuses.clear();
+  document.querySelectorAll('.campus-pill').forEach(p => p.classList.remove('active'));
+  activeSex = '';
+  document.getElementById('sex-all').classList.add('active');
+  document.getElementById('sex-female').classList.remove('active');
+  document.getElementById('sex-male').classList.remove('active');
+  dupFilter = 'all';
+  document.querySelectorAll('.dup-toggle .dup-btn').forEach((b,i) => b.classList.toggle('active', i===0));
+  document.getElementById('search-input').value = '';
+  document.getElementById('program-filter').value = '';
+  document.getElementById('degree-filter').value = '';
+  document.getElementById('nationality-filter').value = '';
+  document.getElementById('country-filter').value = '';
+  currentView = 'all';
+  document.querySelectorAll('.table-tabs .tab-btn').forEach((b,i) => b.classList.toggle('active', i===0));
+  applyFilters();
+}
+
+// ──────────────────────────────────────────────
+//  APPLY FILTERS → Build student map
+// ──────────────────────────────────────────────
+function applyFilters() {
+  const search  = document.getElementById('search-input').value.toLowerCase();
+  const program = document.getElementById('program-filter').value;
+  const degree  = document.getElementById('degree-filter').value;
+  const nat     = document.getElementById('nationality-filter').value;
+  const country = document.getElementById('country-filter').value;
+
+  // Group rows by Surname (col D) + Name (col E) — this is now the
+  // definition of a "unique student", regardless of Student #.
+  const studentMap = groupStudentsByName(allData);
+
+  filteredStudents = Object.entries(studentMap).filter(([key, rows]) => {
+    const combined = `${rows[0].surname} ${rows[0].name} ${rows.map(r=>r.studentNum).join(' ')} ${rows.map(r=>r.program+' '+r.campus).join(' ')}`.toLowerCase();
+    if (search && !combined.includes(search)) return false;
+    if (activeSex && rows[0].sex !== activeSex) return false;
+    if (nat && rows[0].nationality !== nat) return false;
+    if (country && rows[0].country !== country) return false;
+    if (activeCampuses.size && !rows.some(r => activeCampuses.has(r.campus))) return false;
+    if (program && !rows.some(r => r.program === program)) return false;
+    if (degree  && !rows.some(r => r.programVersion === degree)) return false;
+    const campusSet = new Set(rows.map(r => r.campus));
+    const progSet   = new Set(rows.map(r => r.program));
+    if (dupFilter === 'multi-campus' && campusSet.size < 2) return false;
+    if (dupFilter === 'multi-program' && progSet.size < 2) return false;
+    if (dupFilter === 'unique' && rows.length > 1) return false;
+    return true;
+  }).map(([key, rows], idx) => ({
+    id: idx, groupKey: key, rows,
+    studentNum: rows[0].studentNum,
+    studentNums: [...new Set(rows.map(r => r.studentNum).filter(n => n && !n.startsWith('NOID-')))],
+    surname: rows[0].surname, name: rows[0].name,
+    sex: rows[0].sex,
+    nationality: canonNationality(rows[0].nationality, rows[0].country),
+    nationalityRaw: rows[0].nationality,
+    dob: rows[0].dob,
+    campus: rows[0].campus, country: rows[0].country,
+    program: rows[0].program, programVersion: rows[0].programVersion,
+    startDate: rows[0].startDate,
+    campuses: [...new Set(rows.map(r => r.campus))],
+    programs: [...new Set(rows.map(r => r.program).filter(p=>p&&p!=='-'))],
+    programVersions: [...new Set(rows.map(r => r.programVersion).filter(p=>p&&p!=='-'))],
+    isMulti: rows.length > 1,
+  }));
+
+  currentPage = 1;
+  updateKPIs();
+  updateCharts();
+  renderTable();
+}
+
+// ──────────────────────────────────────────────
+//  KPIS
+// ──────────────────────────────────────────────
+function fmt(n) { return n >= 1000 ? (n/1000).toFixed(1).replace('.0','')+'K' : n; }
+function updateKPIs() {
+  const totalRows = filteredStudents.reduce((a,s) => a + s.rows.length, 0);
+  const unique    = filteredStudents.length;
+  const programs  = new Set(filteredStudents.flatMap(s => s.programs)).size;
+  const programVersions = new Set(filteredStudents.flatMap(s => s.programVersions)).size;
+  const campuses  = new Set(filteredStudents.flatMap(s => s.campuses)).size;
+  const nats      = new Set(filteredStudents.map(s => s.nationality)).size;
+  const multi     = filteredStudents.filter(s => s.isMulti).length;
+  const grad      = filteredStudents.filter(s => s.rows.some(r => r.gradDate && r.gradDate !== '-' && r.gradDate !== '')).length;
+  const sisCount  = filteredStudents.reduce((a,s) => a + s.rows.filter(r => r.enrollNum && r.enrollNum !== '-' ).length, 0);
+  const noIdCount = filteredStudents.filter(s => s.rows.some(r => r.missingStudentNum)).length;
+
+  document.getElementById('kpi-total').textContent       = fmt(totalRows);
+  document.getElementById('kpi-unique').textContent      = fmt(unique);
+  document.getElementById('kpi-programs').textContent    = fmt(programs);
+  document.getElementById('kpi-program-versions').textContent = fmt(programVersions);
+  document.getElementById('kpi-campuses').textContent    = campuses;
+  document.getElementById('kpi-nationalities').textContent = nats;
+  document.getElementById('kpi-multi').textContent       = fmt(multi);
+  document.getElementById('kpi-grad').textContent        = fmt(grad);
+  document.getElementById('kpi-sis').textContent          = fmt(sisCount);
+  document.getElementById('kpi-noid').textContent         = fmt(noIdCount);
+  document.getElementById('dup-badge').textContent       = multi + ' multi-entry';
+}
+
+// ──────────────────────────────────────────────
+//  CHARTS
+// ──────────────────────────────────────────────
+const PALETTE = ['#9b1c3a','#1b3a6b','#c0274f','#2c5aa0','#6d1229','#0f2444','#e0577a','#4a77b4','#7a1530','#5f88bd'];
+
+function updateCharts() {
+  // ── Gender ──
+  const males   = filteredStudents.filter(s => s.sex === 'Male').length;
+  const females = filteredStudents.filter(s => s.sex === 'Female').length;
+  const total   = males + females || 1;
+  const fPct = Math.round(females/total*100);
+  const mPct = 100 - fPct;
+  document.getElementById('gender-bar-f').style.width = fPct + '%';
+  document.getElementById('gender-bar-m').style.width = mPct + '%';
+  document.getElementById('gender-bar-f').textContent = fPct > 10 ? fPct + '%' : '';
+  document.getElementById('gender-bar-m').textContent = mPct > 10 ? mPct + '%' : '';
+  document.getElementById('gender-f-val').textContent = females.toLocaleString();
+  document.getElementById('gender-m-val').textContent = males.toLocaleString();
+
+  // ── Nationality bar chart ──
+  const natCounts = {};
+  filteredStudents.forEach(s => { natCounts[s.nationality] = (natCounts[s.nationality]||0) + 1; });
+  const natSorted = Object.entries(natCounts).sort((a,b)=>b[1]-a[1]).slice(0,15);
+  const maxNat = natSorted[0]?.[1] || 1;
+  document.getElementById('nat-chart').innerHTML = natSorted.map(([n,v]) => `
+    <div class="nat-bar-row">
+      <div class="nat-bar-label" title="${n}">${n}</div>
+      <div class="nat-bar-track">
+        <div class="nat-bar-fill" style="width:${(v/maxNat)*100}%"></div>
+      </div>
+      <div class="nat-bar-val">${v}</div>
+    </div>`).join('') || '<div class="empty"><div>No data</div></div>';
+
+  // ── World map bubbles ──
+  // s.nationality is already the canonical label (see canonNationality),
+  // so grouping by that label and looking its coordinate up once keeps the
+  // bubble counts identical to the Nationality bar chart / KPI.
+  const coordCounts = {};
+  filteredStudents.forEach(s => {
+    const coord = COUNTRY_COORDS[s.nationality] || COUNTRY_COORDS[s.country];
+    if (coord) {
+      const ck = coord.join(',');
+      if (!coordCounts[ck]) coordCounts[ck] = { coord, count: 0, label: s.nationality };
+      coordCounts[ck].count++;
+    }
+  });
+  const bubbles = Object.values(coordCounts);
+  const maxB = Math.max(...bubbles.map(b=>b.count), 1);
+  document.getElementById('map-bubbles').innerHTML = bubbles.map(b => {
+    const r = 4 + (b.count / maxB) * 22;
+    return `<circle class="map-bubble" cx="${b.coord[0]}" cy="${b.coord[1]}" r="${r}"
+      data-label="${b.label}: ${b.count} students"
+      onmouseenter="showMapTip(event,this)" onmouseleave="hideMapTip()"/>`;
+  }).join('');
+
+  // ── Programs by Campus ──
+  const campusProg = {};
+  filteredStudents.forEach(s => s.campuses.forEach(c => {
+    campusProg[c] = (campusProg[c]||0) + 1;
+  }));
+  const cpSorted = Object.entries(campusProg).sort((a,b)=>b[1]-a[1]);
+  const maxCP = cpSorted[0]?.[1]||1;
+  document.getElementById('prog-campus-badge').textContent = cpSorted.length + ' campuses';
+  document.getElementById('prog-campus-chart').innerHTML = cpSorted.map(([c,v],i) => `
+    <div class="nat-bar-row">
+      <div class="nat-bar-label" title="${c}">${c}</div>
+      <div class="nat-bar-track">
+        <div class="nat-bar-fill" style="width:${(v/maxCP)*100}%;background:${PALETTE[i%PALETTE.length]}"></div>
+      </div>
+      <div class="nat-bar-val">${v}</div>
+    </div>`).join('') || '<div class="empty">No data</div>';
+
+  // ── Degree level ── (unique students per program version — a student
+  // with 2 rows both "Bachelor of Business Administration" counts once)
+  const degCounts = {};
+  filteredStudents.forEach(s => s.programVersions.forEach(v => {
+    if (v && v !== '-') degCounts[v] = (degCounts[v]||0)+1;
+  }));
+  const degSortedAll = Object.entries(degCounts).sort((a,b)=>b[1]-a[1]);
+  const degSorted = degSortedAll.slice(0,15);
+  const maxDeg = degSorted[0]?.[1]||1;
+  const degBadge = document.getElementById('degree-badge');
+  if (degBadge) degBadge.textContent = degSortedAll.length + (degSortedAll.length === 1 ? ' version' : ' versions');
+  document.getElementById('degree-chart').innerHTML = degSorted.map(([d,v],i) => `
+    <div class="nat-bar-row">
+      <div class="nat-bar-label" title="${d}" style="width:150px">${d}</div>
+      <div class="nat-bar-track">
+        <div class="nat-bar-fill" style="width:${(v/maxDeg)*100}%;background:${PALETTE[(i+4)%PALETTE.length]}"></div>
+      </div>
+      <div class="nat-bar-val">${v}</div>
+    </div>`).join('') || '<div class="empty">No data</div>';
+
+  document.getElementById('map-count').textContent = filteredStudents.length + ' students';
+}
+
+function showMapTip(e, el) {
+  const label = el.dataset.label;
+  const tt = document.getElementById('map-tooltip');
+  const tx = document.getElementById('tt-text');
+  const bg = document.getElementById('tt-bg');
+  tx.textContent = label;
+  const bbox = tx.getBBox ? tx.getBBox() : {width:100,height:14};
+  bg.setAttribute('x', bbox.x - 5);
+  bg.setAttribute('y', bbox.y - 3);
+  bg.setAttribute('width', (bbox.width||100) + 10);
+  bg.setAttribute('height', (bbox.height||14) + 6);
+  const cx = parseFloat(el.getAttribute('cx'));
+  const cy = parseFloat(el.getAttribute('cy'));
+  tt.setAttribute('transform', `translate(${cx+6},${cy-10})`);
+  tt.setAttribute('opacity','1');
+}
+function hideMapTip() {
+  document.getElementById('map-tooltip').setAttribute('opacity','0');
+}
+
+// ──────────────────────────────────────────────
+//  TABLE
+// ──────────────────────────────────────────────
+function sortBy(field, th) {
+  if (sortField === field) sortAsc = !sortAsc;
+  else { sortField = field; sortAsc = true; }
+  document.querySelectorAll('thead th').forEach(t => t.classList.remove('sorted'));
+  th.classList.add('sorted');
+  renderTable();
+}
+
+function getStatus(s) {
+  if (s.rows.some(r => r.gradDate && r.gradDate !== '-' && r.gradDate !== '')) return 'grad';
+  if (s.rows.some(r => r.withdrawal && r.withdrawal !== '-' && r.withdrawal !== '')) return 'withdrawn';
+  return 'active';
+}
+
+function renderTable() {
+  let data = [...filteredStudents];
+  if (currentView === 'multi') data = data.filter(s => s.isMulti);
+  if (currentView === 'unique') data = data.filter(s => !s.isMulti);
+
+  data.sort((a,b) => {
+    const av = a[sortField]||'', bv = b[sortField]||'';
+    return sortAsc ? String(av).localeCompare(String(bv)) : String(bv).localeCompare(String(av));
+  });
+
+  const total = data.length;
+  const start = (currentPage-1)*PAGE_SIZE;
+  const page  = data.slice(start, start+PAGE_SIZE);
+
+  const statusChip = st => ({
+    grad: `<span class="chip grad">✓ Graduated</span>`,
+    withdrawn: `<span class="chip withdrawn">✗ Withdrawn</span>`,
+    active: `<span class="chip active-s">● Active</span>`,
+  }[st]);
+
+  document.getElementById('table-body').innerHTML = page.length ? page.map(s => {
+    const st = getStatus(s);
+    const degShort = (s.programVersion||'').replace('Bachelor of','B.').replace('Associate of','Assoc.').replace('Master of','M.') || '—';
+    const idDisplay = s.studentNums.length ? s.studentNums.join(', ') : '—';
+    return `<tr class="${s.isMulti?'dup-row':''}" onclick="openModal(${s.id})" style="cursor:pointer">
+      <td>${idDisplay}</td>
+      <td><strong>${s.surname}</strong>, ${s.name}</td>
+      <td>${s.campuses.map(c=>`<span class="chip campus">${c}</span>`).join(' ')}</td>
+      <td><span class="chip ${s.sex==='Male'?'male':'female'}">${s.sex||'—'}</span></td>
+      <td>${s.dob||'—'}</td>
+      <td>${s.nationality||'—'}</td>
+      <td title="${s.program}">${(s.program||'').substring(0,26)}${(s.program||'').length>26?'…':''}</td>
+      <td title="${s.programVersion}">${degShort}</td>
+      <td>${s.startDate||'—'}</td>
+      <td>${statusChip(st)}</td>
+      <td>${s.isMulti ? `<span class="chip dup">${s.rows.length} entries</span>` : '<span style="color:#aaa;font-size:11px">1 entry</span>'}</td>
+    </tr>`;
+  }).join('') : `<tr><td colspan="11"><div class="empty"><div class="empty-icon">📭</div>No students match current filters.</div></td></tr>`;
+
+  // Pagination
+  const totalPages = Math.ceil(total/PAGE_SIZE);
+  document.getElementById('pagination-info').textContent =
+    `Showing ${Math.min(start+1,total)}–${Math.min(start+PAGE_SIZE,total)} of ${total} students`;
+  const pb = document.getElementById('page-btns');
+  pb.innerHTML = '';
+  const add = (label, p, disabled=false, active=false) => {
+    const b = document.createElement('button');
+    b.className = 'page-btn'+(active?' active':'');
+    b.textContent = label; b.disabled = disabled;
+    b.onclick = () => { currentPage = p; renderTable(); };
+    pb.appendChild(b);
+  };
+  add('‹', currentPage-1, currentPage===1);
+  const maxP = Math.min(totalPages, 5);
+  const start0 = Math.max(1, Math.min(currentPage-2, totalPages-maxP+1));
+  for (let p=start0; p<start0+maxP && p<=totalPages; p++) add(p, p, false, p===currentPage);
+  add('›', currentPage+1, currentPage===totalPages||totalPages===0);
+}
+
+// ──────────────────────────────────────────────
+//  MODAL
+// ──────────────────────────────────────────────
+function openModal(id) {
+  const s = filteredStudents.find(x => x.id===id);
+  if (!s) return;
+  document.getElementById('modal-name').textContent = `${s.surname}, ${s.name}`;
+  document.getElementById('modal-id').textContent   = `Student # ${s.studentNums.length ? s.studentNums.join(', ') : '—'}`;
+  document.getElementById('modal-demo').innerHTML = `
+    <div class="enroll-card">
+      <div class="enroll-row"><span class="enroll-key">Gender</span><span class="enroll-val">${s.sex||'—'}</span></div>
+      <div class="enroll-row"><span class="enroll-key">Nationality</span><span class="enroll-val">${s.nationality||'—'}</span></div>
+      <div class="enroll-row"><span class="enroll-key">Country</span><span class="enroll-val">${s.country||'—'}</span></div>
+      <div class="enroll-row"><span class="enroll-key">Date of Birth</span><span class="enroll-val">${s.rows[0].dob||'—'}</span></div>
+    </div>`;
+  document.getElementById('modal-enrollments').innerHTML = s.rows.map((r,i) => {
+    const isCurrent = !r.gradDate && !r.withdrawal;
+    return `<div class="enroll-card ${isCurrent?'current':''}">
+      <div style="font-size:10px;color:#999;font-weight:700;margin-bottom:6px">
+        RECORD ${i+1} ${isCurrent?'· <span style="color:#9b1c3a">Current</span>':''}
+      </div>
+      <div class="enroll-row"><span class="enroll-key">Campus</span><span class="enroll-val">${r.campus}</span></div>
+      <div class="enroll-row"><span class="enroll-key">Program</span><span class="enroll-val">${r.program||'—'}</span></div>
+      <div class="enroll-row"><span class="enroll-key">Program Version</span><span class="enroll-val">${r.programVersion||'—'}</span></div>
+      <div class="enroll-row"><span class="enroll-key">Enrollment #</span><span class="enroll-val">${r.enrollNum||'N/A'}</span></div>
+      <div class="enroll-row"><span class="enroll-key">Start Date</span><span class="enroll-val">${r.startDate||'—'}</span></div>
+      <div class="enroll-row"><span class="enroll-key">Withdrawal</span><span class="enroll-val">${r.withdrawal||'—'}</span></div>
+      <div class="enroll-row"><span class="enroll-key">Grad Date</span><span class="enroll-val">${r.gradDate||'—'}</span></div>
+    </div>`;
+  }).join('');
+  document.getElementById('modal-backdrop').classList.add('open');
+}
+function closeModal(e) {
+  if (e.target.id==='modal-backdrop') document.getElementById('modal-backdrop').classList.remove('open');
+}
+
+init();
+</script>
+</body>
+</html>
