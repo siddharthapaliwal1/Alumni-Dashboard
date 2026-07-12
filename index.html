@@ -1356,14 +1356,30 @@ function processWorkbookData(rawData, type, sourceName) {
 // ──────────────────────────────────────────────
 //  INIT
 // ──────────────────────────────────────────────
-function init() {
-  allData = SAMPLE;
-  rebuildFilters();
-  applyFilters();
-  if (allData.length === 0) {
-    document.getElementById('upload-status').textContent = 'No data loaded — upload your Excel file';
-    document.getElementById('upload-overlay').classList.add('open');
-  }
+async function init() {
+
+    try {
+
+        const resp = await fetch("./Dummy_Students.xlsx");
+
+        const buf = await resp.arrayBuffer();
+
+        processWorkbookData(buf, "array", "Dummy_Students.xlsx");
+
+    }
+
+    catch(err){
+
+        allData = SAMPLE;
+
+        rebuildFilters();
+
+        applyFilters();
+
+        document.getElementById('upload-overlay').classList.add('open');
+
+    }
+
 }
 
 // ──────────────────────────────────────────────
